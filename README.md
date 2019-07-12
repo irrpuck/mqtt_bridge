@@ -3,6 +3,34 @@
 mqtt_bridge provides a functionality to bridge between ROS and MQTT in bidirectional.
 
 
+## Important!!!
+
+This repo has been modified to add support for `qos` and `retain` options by Kaiyan. The only modified file is `src/mqtt_bridge/bridge.py` and the modified lines have a trailing comments stating **# added support for qos and retain**.
+
+The following is an example to apply the `qos` and `retain` options. Only communications from ROS to MQTT can have those two options!
+
+``` yaml
+mqtt:
+  client:
+    protocol: 4      # MQTTv311
+  connection:
+    host: localhost
+    port: 1883
+    keepalive: 60
+bridge:
+  # ping pong
+  - factory: mqtt_bridge.bridge:RosToMqttBridge
+    msg_type: std_msgs.msg:Bool
+    topic_from: /ping
+    topic_to: ping
+    qos: 1
+    retain: True
+  - factory: mqtt_bridge.bridge:MqttToRosBridge
+    msg_type: std_msgs.msg:Bool
+    topic_from: ping
+    topic_to: /pong
+```
+
 ## Principle
 
 `mqtt_bridge` uses ROS message as its protocol. Messages from ROS are serialized by json (or messagepack) for MQTT, and messages from MQTT are deserialized for ROS topic. So MQTT messages should be ROS message compatible. (We use `rosbridge_library.internal.message_conversion` for message conversion.)
