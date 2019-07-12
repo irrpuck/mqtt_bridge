@@ -58,11 +58,13 @@ class RosToMqttBridge(Bridge):
     :param (float|None) frequency: publish frequency
     """
 
-    def __init__(self, topic_from, topic_to, msg_type, frequency=None):
+    def __init__(self, topic_from, topic_to, msg_type, frequency=None, qos=0, retain=False):  # added support for qos and retain
         self._topic_from = topic_from
         self._topic_to = self._extract_private_path(topic_to)
         self._last_published = rospy.get_time()
         self._interval = 0 if frequency is None else 1.0 / frequency
+        self._qos = qos  # added support for qos and retain
+        self._retain = retain  # added support for qos and retain
         rospy.Subscriber(topic_from, msg_type, self._callback_ros)
 
     def _callback_ros(self, msg):
@@ -74,7 +76,7 @@ class RosToMqttBridge(Bridge):
 
     def _publish(self, msg):
         payload = bytearray(self._serialize(extract_values(msg)))
-        self._mqtt_client.publish(topic=self._topic_to, payload=payload)
+        self._mqtt_client.publish(topic=self._topic_to, payload=payload, qos=self._qos, retain=self._retain)  # added support for qos and retain
 
 
 class MqttToRosBridge(Bridge):
